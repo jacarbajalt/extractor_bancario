@@ -8,13 +8,12 @@ import pdfplumber
 from flask import Flask, request, jsonify
 from PyPDF2 import PdfReader, PdfWriter
 
-from parsers import bbva_parser, banamex_parser
+from parsers import bbva_parser
 
 app = Flask(__name__)
 
 BANK_PARSERS = {
     "BBVA": bbva_parser,
-    "Banamex": banamex_parser,
 }
 
 def identify_bank_and_year(pdf: pdfplumber.PDF) -> (Optional[str], Optional[str]):
@@ -31,18 +30,15 @@ def identify_bank_and_year(pdf: pdfplumber.PDF) -> (Optional[str], Optional[str]
         if not bank:
             if "BBVA" in text:
                 bank = "BBVA"
-            elif "BANAMEX" in text or "CITIBANAMEX" in text:
-                bank = "Banamex"
+            else:
+                bank = "Banco no soportado"
         
         # Extraer año
         if not year:
             match_bbva = re.search(r'DEL \d{2}/\d{2}/(\d{4})', text)
-            match_banamex = re.search(r'AL \d{1,2} DE \w+ DE (\d{4})', text)
             
             if match_bbva:
                 year = match_bbva.group(1)
-            elif match_banamex:
-                year = match_banamex.group(1)
 
         # Si ya encontramos ambos, salimos del bucle
         if bank and year:
@@ -55,7 +51,7 @@ def identify_bank_and_year(pdf: pdfplumber.PDF) -> (Optional[str], Optional[str]
         
     return bank, year
 
-@app.route('/extract', methods=['POST'])
+@app.route('/extraer_datos_pdf', methods=['POST'])
 def extract_endpoint():
     """
     Endpoint multibancario para extraer transacciones de un PDF en Base64.
