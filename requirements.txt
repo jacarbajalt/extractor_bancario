@@ -1,3 +1,9 @@
 Flask
 PyPDF2
 pdfplumber
+cryptography
+markupsafe
+jinja2
+tabula-py
+pandas
+openpyxl
